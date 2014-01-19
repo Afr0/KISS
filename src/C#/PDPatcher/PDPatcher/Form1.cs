@@ -66,23 +66,14 @@ namespace PDPatcher
             //Versions didn't match, do update.
             if (m_ClientManifest.Version != m_PatchManifest.Version)
             {
-                int ClientIndex = 0;
-
-                for(int i = 0; i < m_ClientManifest.PatchFiles.Count; i++)
+                foreach (PatchFile clPF in m_ClientManifest.PatchFiles)
                 {
-                    string PatchName = Path.GetFileName(m_PatchManifest.PatchFiles[i].Address);
-                    string ClientName = Path.GetFileName(m_ClientManifest.PatchFiles[i].Address);
-
-                    //This is slow, hashes will probably have to be binary to
-                    //be fast above 1000 files.
-                    if ((m_PatchManifest.PatchFiles[i].FileHash != m_ClientManifest.PatchFiles[i].FileHash) ||
-                        (PatchName != ClientName))
-                        m_PatchDiff.Add(m_PatchManifest.PatchFiles[i]);
-
-                    ClientIndex++;
+                    foreach (PatchFile pmPF in m_PatchManifest.PatchFiles)
+                    {
+                        if (NeedToDownloadFile(pmPF, clPF))
+                            m_PatchDiff.Add(pmPF);
+                    }
                 }
-
-                //TODO: What to do if patch manifest > client manifest?
 
                 Directory.CreateDirectory("Tmp");
                 m_Requester.FetchFile(m_PatchDiff[0].URL);
@@ -92,6 +83,17 @@ namespace PDPatcher
                 MessageBox.Show("Your client is up to date!\n Exiting...");
                 Application.Exit();
             }
+        }
+
+        private bool NeedToDownloadFile(PatchFile Patch, PatchFile Client)
+        {
+            string PatchName = Path.GetFileName(Patch.Address);
+            string ClientName = Path.GetFileName(Patch.Address);
+
+            if ((Patch.FileHash != Client.FileHash) || (PatchName != ClientName))
+                return true;
+
+            return false;
         }
 
         /// <summary>

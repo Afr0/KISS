@@ -1,0 +1,1 @@
+Manifestation is an application used to generate manifests for the KISS framework.
